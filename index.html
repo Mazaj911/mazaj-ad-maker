@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>صانع إعلانات مزاج</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0b1030;color:#f2e6c0;font-family:'Noto Kufi Arabic',Tahoma,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:16px;display:flex;flex-wrap:wrap;gap:20px}
+.panel{flex:1 1 300px}
+.view{flex:1 1 420px;text-align:center}
+h1{font-size:22px;margin:0 0 12px;color:#e9c262}
+label{display:block;margin:12px 0 4px;font-size:14px}
+input[type=text],input[type=file]{width:100%;box-sizing:border-box;padding:9px;border-radius:8px;border:1px solid #3b4380;background:#141a48;color:#fff;font-size:16px}
+input[type=range]{width:100%}
+button{margin-top:16px;width:100%;padding:13px;border:0;border-radius:10px;background:#e9c262;color:#14183f;font-size:18px;font-weight:700;font-family:inherit;cursor:pointer}
+canvas#out{width:100%;max-width:540px;border-radius:8px;box-shadow:0 4px 24px #0008}
+.hint{font-size:12px;opacity:.75;margin-top:4px}
+body.canvasonly .panel,body.canvasonly h1{display:none}body.canvasonly .wrap{padding:0;margin:0;max-width:none}
+body.canvasonly canvas#out{max-width:1080px;width:1080px}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="panel">
+  <h1>صانع إعلانات مزاج</h1>
+  <label><input type="checkbox" id="ai" checked> قص الخلفية تلقائيا بالذكاء الاصطناعي (مجاني، يحتاج إنترنت)</label>
+  <label>صورة العطر الأصلي (خلفية سادة أو PNG شفاف)</label>
+  <input type="file" id="file" accept="image/*">
+  <label>اسم العطر بالعربي</label>
+  <input type="text" id="ar" value="كريد أفينتوس">
+  <label>اسم العطر بالإنجليزي (اختياري)</label>
+  <input type="text" id="en" value="CREED AVENTUS" dir="ltr">
+  <label>رقم الواتساب</label>
+  <input type="text" id="phone" value="0911290777" dir="ltr">
+  <div id="status" class="hint" style="min-height:18px"></div>
+  <details><summary style="cursor:pointer;margin-top:10px">إعدادات القص اليدوي (متقدم)</summary>
+  <label>قص الخلفية: الحساسية <span id="tolv">12</span></label>
+  <input type="range" id="tol" min="3" max="120" value="12">
+  <div class="hint">لو بقت حواف أو ظل من الخلفية زوّد الرقم. لو اتأكل جزء من العبوة قلّله.</div>
+  <label>نعومة الظلال: <span id="stepv">3</span></label>
+  <input type="range" id="step" min="1" max="14" value="3">
+  <label>حذف الرمادي/البيج (للعبوات الملونة): <span id="chromav">0</span></label>
+  <input type="range" id="chroma" min="0" max="90" value="0">
+  <label><input type="checkbox" id="sym" checked> اجعل العبوة متماثلة (يشيل الظلال الجانبية)</label>
+  <label>الجزء الظاهر من العبوة الأصلية: <span id="visv">60</span>%</label>
+  <input type="range" id="vis" min="40" max="90" value="60">
+  </details>
+  <label>تنظيف يدوي: اسحب بإصبعك على الصورة لمسح بقايا الخلفية</label>
+  <div style="display:flex;gap:8px;align-items:center"><select id="mode"><option value="e">مسح</option><option value="r">استرجاع</option></select><input type="range" id="brush" min="8" max="90" value="30"><button id="undo" style="margin:0;width:auto;padding:8px 12px;font-size:14px">تراجع</button></div>
+  <canvas id="edit" style="width:100%;margin-top:8px;border-radius:8px;touch-action:none;background:repeating-conic-gradient(#555 0 25%,#777 0 50%) 0 0/20px 20px"></canvas>
+  <button id="dl">تحميل الإعلان PNG</button>
+  <div class="hint">كل شيء يتم في جهازك. لا تُرفع أي صورة لأي سيرفر.</div>
+ </div>
+ <div class="view"><canvas id="out" width="2160" height="2160"></canvas></div>
+</div>
+<div class="wrap" style="padding-top:0"><div class="panel" style="flex-basis:100%">
+<details><summary style="cursor:pointer;font-size:18px;color:#e9c262">دليل الاستخدام والتنبيهات (اضغط)</summary>
+<div style="line-height:1.9;font-size:15px">
+<h3>كيف أستخدم الأداة؟</h3>
+<ol><li>اختر صورة العطر الأصلي من جهازك (الأفضل صورة واضحة والعبوة كاملة).</li>
+<li>اكتب الاسم بالعربي والإنجليزي، وتأكد من رقم الواتساب.</li>
+<li>انتظر القص التلقائي للخلفية. لو في بقايا امسحها بإصبعك على الصورة الصغيرة تحت (مسح / استرجاع).</li>
+<li>اضغط تحميل الإعلان. بتنزل صورة PNG كبيرة (2160x2160) جاهزة للنشر.</li></ol>
+<h3>ما هي هذه الصفحة؟</h3>
+<p>صفحة واحدة تشتغل داخل المتصفح بتاعك. التصميم (الخلفية، الشعار، عبوة مزاج، الخط الأبيض في النص، نسبة الظهور 60% للأصلي و50% لمزاج) محفوظ داخلها. GitHub هو مخزن للملفات، و GitHub Pages يعرض الصفحة كموقع مجاني على الإنترنت.</p>
+<h3>الخصوصية</h3>
+<ul><li>الصور اللي تختارها ما بتتحمل على أي سيرفر منا، المعالجة في جهازك.</li>
+<li>القص بالذكاء الاصطناعي يحمل ملفات النموذج من الإنترنت (مرة واحدة تقريبا)، لكن صورتك تبقى في جهازك.</li>
+<li>المستودع عام: أي زول معاه الرابط (أو يبحث في GitHub) يقدر يشوف الملفات: شعارك وتصميم الإعلان ورقم الواتساب. ما تضع فيه كلمات سر أو بيانات زبائن أو أي حاجة سرية.</li></ul>
+<h3>تنبيهات</h3>
+<ul><li>القص التلقائي ما كامل 100%. راجع الحواف قبل النشر.</li>
+<li>صور العطور الأصلية ملك أصحابها، استخدمها بحذر قانونيا وعلى مسؤوليتك.</li>
+<li>الخدمة مجانية، لكن GitHub ممكن يغير شروطه مستقبلا. احتفظ بنسخة من الملفات على جهازك (Code ثم Download ZIP).</li></ul>
+<h3>التحديث</h3>
+<p>لتغيير الرقم أو التصميم تحتاج تعديل ملف index.html في المستودع على GitHub (القلم Edit) أو تطلب مني. بعد الحفظ الموقع يتحدث خلال دقائق.</p>
+</div></details></div></div>
+<script src="assets.js"></script>
+<script>
+const S=2, $=id=>document.getElementById(id);
+const cv=$('out'), ctx=cv.getContext('2d');
+function load(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
+let IM={}, srcImg=null, orig=null;
+
+let CACHE=null;
+function stage1(img,tol,sym,step,chroma){
+  const key=[img.src,tol,sym,step,chroma].join('|');
+  if(CACHE&&CACHE.key===key) return CACHE;
+  const M=1400, k=Math.min(1,M/Math.max(img.width,img.height));
+  const w=Math.round(img.width*k), h=Math.round(img.height*k), n=w*h;
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(img,0,0,w,h);
+  const p=g.getImageData(0,0,w,h).data;
+  let tb=0,tot=0; const edge=(x,y)=>{tot++; if(p[(y*w+x)*4+3]<200) tb++;};
+  for(let x=0;x<w;x++){edge(x,0);edge(x,h-1);} for(let y=0;y<h;y++){edge(0,y);edge(w-1,y);}
+  const hasAlpha=tb/tot>0.5;
+  const bgm=new Uint8Array(n);
+  if(hasAlpha){ for(let i=0;i<n;i++) bgm[i]=p[i*4+3]<110?1:0; }
+  else{
+    let r=0,gg=0,b=0,cnt=0; const add=(x,y)=>{const i=(y*w+x)*4;r+=p[i];gg+=p[i+1];b+=p[i+2];cnt++;};
+    for(let x=0;x<w;x+=3){add(x,0);add(x,h-1);} for(let y=0;y<h;y+=3){add(0,y);add(w-1,y);}
+    r/=cnt;gg/=cnt;b/=cnt;
+    const LD=Math.round(Math.max(w,h)*0.09);
+    const dist=i=>Math.max(Math.abs(p[i*4]-r),Math.abs(p[i*4+1]-gg),Math.abs(p[i*4+2]-b));
+    const dd=(i,j)=>Math.max(Math.abs(p[i*4]-p[j*4]),Math.abs(p[i*4+1]-p[j*4+1]),Math.abs(p[i*4+2]-p[j*4+2]));
+    const lowc=i=>{ if(!chroma) return false; const R=p[i*4],G=p[i*4+1],B=p[i*4+2]; return (Math.max(R,G,B)-Math.min(R,G,B))<chroma && Math.max(R,G,B)>120; };
+    const q=new Int32Array(n), dep=new Uint16Array(n); let qh=0,qt=0;
+    const seed=i=>{ if(!bgm[i]&&(dist(i)<=tol||lowc(i))){bgm[i]=1;q[qt++]=i;} };
+    for(let x=0;x<w;x++){seed(x);seed((h-1)*w+x);} for(let y=0;y<h;y++){seed(y*w);seed(y*w+w-1);}
+    const grow=(i,j)=>{ if(bgm[j]) return; if(dist(j)<=tol || (dd(i,j)<=step && dist(j)<=tol*4)){bgm[j]=1;dep[j]=0;q[qt++]=j;} else if(lowc(j) && dep[i]<LD){bgm[j]=1;dep[j]=dep[i]+1;q[qt++]=j;} };
+    while(qh<qt){const i=q[qh++],x=i%w,y=(i/w)|0;
+      if(x>0)grow(i,i-1); if(x<w-1)grow(i,i+1); if(y>0)grow(i,i-w); if(y<h-1)grow(i,i+w);}
+  }
+  const lab=new Int32Array(n), sizes=[0]; let L=0; const q2=new Int32Array(n);
+  for(let s0=0;s0<n;s0++){ if(bgm[s0]||lab[s0])continue; L++; let qh=0,qt=0; q2[qt++]=s0; lab[s0]=L;
+    while(qh<qt){const i=q2[qh++],x=i%w,y=(i/w)|0;
+      const nb=[x>0?i-1:-1,x<w-1?i+1:-1,y>0?i-w:-1,y<h-1?i+w:-1];
+      for(const j of nb){ if(j>=0&&!bgm[j]&&!lab[j]){lab[j]=L;q2[qt++]=j;} } }
+    sizes[L]=qt; }
+  const mx=Math.max(...sizes);
+  const fg=new Uint8Array(n); for(let i=0;i<n;i++) fg[i]=(lab[i]&&sizes[lab[i]]>=mx*0.03)?1:0;
+  let x0=w,x1=0,y0=h,y1=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++) if(fg[y*w+x]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+  if(x1>x0 && sym){ const ax=(x0+x1)/2, left=new Array(h).fill(-1);
+    for(let y=y0;y<=y1;y++){ for(let x=x0;x<=x1;x++) if(fg[y*w+x]){left[y]=x;break;} }
+    let last=-1; for(let y=y0;y<=y1;y++){ if(left[y]>=0){ if(last>=0&&y-last>1){ for(let kk=last+1;kk<y;kk++) left[kk]=Math.round(left[last]+(left[y]-left[last])*(kk-last)/(y-last)); } last=y; } }
+    const sm=left.slice(); for(let y=y0;y<=y1;y++){ const a=[]; const WN=Math.round((y1-y0)*0.06); for(let kk=-WN;kk<=WN;kk++){ const yy=y+kk; if(yy>=y0&&yy<=y1&&left[yy]>=0) a.push(left[yy]); } a.sort((u,v)=>u-v); sm[y]=a.length?a[Math.floor(a.length*0.72)]:left[y]; }
+    for(let y=y0;y<=y1;y++){ for(let x=0;x<w;x++) fg[y*w+x]=0; const l=sm[y]; if(l>=0){const half=ax-l; for(let x=Math.max(0,Math.round(ax-half));x<=Math.min(w-1,Math.round(ax+half));x++) fg[y*w+x]=1;} } }
+  CACHE={key,w,h,p,fg,hasAlpha}; window.__alphaSeen=hasAlpha; return CACHE;
+}
+let EDITS=[];
+function cutout(img,tol,sym,step,chroma){
+  const C=stage1(img,tol,sym,step,chroma), w=C.w,h=C.h,n=w*h,p=C.p;
+  const fg=C.fg.slice();
+  for(const e of EDITS){ const r=e.r*w, cx=e.x*w, cy=e.y*h;
+    for(let y=Math.max(0,Math.floor(cy-r));y<=Math.min(h-1,Math.ceil(cy+r));y++)for(let x=Math.max(0,Math.floor(cx-r));x<=Math.min(w-1,Math.ceil(cx+r));x++)
+      if((x-cx)*(x-cx)+(y-cy)*(y-cy)<=r*r) fg[y*w+x]=e.m==='r'?1:0; }
+  const er=new Uint8Array(n);
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x; er[i]=(fg[i]&&fg[i-1]&&fg[i+1]&&fg[i-w]&&fg[i+w])?1:0;}
+  let x0=w,x1=0,y0=h,y1=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++) if(er[y*w+x]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+  if(x1<=x0) return null;
+  const out=new ImageData(w,h);
+  for(let i=0;i<n;i++){ out.data[i*4]=p[i*4];out.data[i*4+1]=p[i*4+1];out.data[i*4+2]=p[i*4+2]; out.data[i*4+3]=er[i]?255:0; }
+  const c2=document.createElement('canvas'); c2.width=w; c2.height=h; c2.getContext('2d').putImageData(out,0,0);
+  const c3=document.createElement('canvas'); c3.width=w; c3.height=h; const g3=c3.getContext('2d');
+  g3.filter='blur(0.8px)'; g3.drawImage(c2,0,0); g3.filter='none';
+  window.__full=c3;
+  const bw=x1-x0+1, bh=y1-y0+1, c4=document.createElement('canvas'); c4.width=bw; c4.height=bh;
+  c4.getContext('2d').drawImage(c3,x0,y0,bw,bh,0,0,bw,bh);
+  return c4;
+}
+
+function fitText(text,font,maxW,size){ let s=size; do{ctx.font=font.replace('%',s); if(ctx.measureText(text).width<=maxW)break; s-=2;}while(s>20); return s;}
+
+function draw(){
+  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.scale(S,S);
+  ctx.drawImage(IM.bg,0,0,1080,1080);
+  const H=510,bottom=955,top=bottom-H;
+  const visO=parseInt($('vis').value)/100, visM=0.5;
+  const bottle=(img,vis,side)=>{ if(!img)return; const W=img.width*H/img.height;
+    const x0= side==='l'? 540-vis*W : 540-(1-vis)*W;
+    ctx.save(); ctx.beginPath(); if(side==='l')ctx.rect(0,0,540,1080); else ctx.rect(540,0,540,1080); ctx.clip();
+    ctx.shadowColor='rgba(0,0,0,.27)'; ctx.shadowBlur=16*S; ctx.shadowOffsetY=14*S;
+    ctx.drawImage(img,x0,top,W,H); ctx.restore(); };
+  bottle(orig,visO,'l'); bottle(IM.mazaj,visM,'r');
+  ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fillRect(539,0,3,1080);
+  // footer
+  const phone=$('phone').value||'';
+  ctx.font='700 54px "DejaVu Serif",Georgia,serif'; ctx.letterSpacing='3px';
+  const tw=ctx.measureText(phone).width;
+  const total=130+10+16+72+16+tw+16+10+130; let x=(1080-total)/2;
+  ctx.fillStyle='#c9a24d'; ctx.fillRect(x,1014-1,130,2); x+=130+10+16;
+  ctx.drawImage(IM.wa,x,978,72,72); x+=72+16;
+  ctx.fillStyle='#ead08a'; ctx.textBaseline='middle'; ctx.textAlign='left'; ctx.direction='ltr'; ctx.fillText(phone,x,1014+2); x+=tw+16+10;
+  ctx.fillStyle='#c9a24d'; ctx.fillRect(x,1013,130,2); ctx.letterSpacing='0px';
+  // logo
+  ctx.drawImage(IM.logo,265,6,550,550*IM.logo.height/IM.logo.width);
+  // tagline
+  ctx.save(); ctx.direction='rtl'; ctx.textAlign='right'; ctx.textBaseline='middle';
+  ctx.font='800 76px "Noto Kufi Arabic",Tahoma,sans-serif'; ctx.fillStyle='#fff';
+  ctx.shadowColor='rgba(0,0,0,.67)'; ctx.shadowBlur=12*S; ctx.shadowOffsetY=2*S;
+  ['بديل','عطرك','الأصلي'].forEach((t,i)=>ctx.fillText(t,1018,420+49.4+i*98.8));
+  ctx.restore();
+  ctx.save(); ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.lineCap='round'; ctx.setLineDash([0,8]);
+  ctx.beginPath(); ctx.moveTo(1038,422); ctx.lineTo(1038,420+296); ctx.stroke(); ctx.restore();
+  // name
+  const ar=$('ar').value.trim(), en=$('en').value.trim(); ctx.save();
+  ctx.fillStyle='#e9c262'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.direction='rtl';
+  const cx=137; const sz=fitText(ar,'700 %px "Noto Kufi Arabic",Tahoma,sans-serif',280,52);
+  ctx.font=`700 ${sz}px "Noto Kufi Arabic",Tahoma,sans-serif`; ctx.fillText(ar,cx,690+39);
+  if(en){ ctx.direction='ltr'; const s2=fitText(en,'400 %px "DejaVu Sans",Verdana,sans-serif',280,28);
+    ctx.font=`400 ${s2}px "DejaVu Sans",Verdana,sans-serif`; ctx.letterSpacing='2px'; ctx.fillText(en,cx,690+78+21); }
+  ctx.restore();
+}
+
+let AIlib=null;
+async function aiCut(img){
+  const k=Math.min(1,1600/Math.max(img.width,img.height)), c=document.createElement('canvas'); c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const blob=await new Promise(r=>c.toBlob(r,'image/png'));
+  if(!AIlib) AIlib=await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/+esm');
+  const out=await AIlib.removeBackground(blob);
+  return await load(URL.createObjectURL(out));
+}
+async function autoset(i){
+  EDITS=[]; CACHE=null; let used='classic';
+  if($('ai').checked){
+    $('status').textContent='جاري قص الخلفية بالذكاء الاصطناعي... (أول مرة قد تأخذ دقيقة لتحميل النموذج)';
+    try{ srcImg=await aiCut(i); used='ai'; $('status').textContent='تم القص بالذكاء الاصطناعي. لو في بقايا امسحها بإصبعك تحت.'; }
+    catch(e){ srcImg=i; $('status').textContent='تعذر القص الذكي (ربما لا يوجد إنترنت). استُخدم القص البسيط، عدّل الحساسية أو امسح البقايا يدويا.'; }
+  } else { srcImg=i; $('status').textContent=''; }
+  stage1(srcImg,12,false,3,0); const a=window.__alphaSeen; $('tol').value=a?40:12; $('tolv').textContent=$('tol').value; $('sym').checked=(used==='classic'&&!a); rebuild(); window.__done=used;
+}
+function drawEdit(){ const e=$('edit'); if(!window.__full){return;} const f=window.__full; e.width=f.width; e.height=f.height; const g=e.getContext('2d'); g.clearRect(0,0,e.width,e.height); g.drawImage(f,0,0); }
+function rebuild(){ if(srcImg) orig=cutout(srcImg,parseInt($('tol').value),$('sym').checked,parseInt($('step').value),parseInt($('chroma').value)); drawEdit(); draw(); }
+
+async function init(){
+  IM.bg=await load(ASSETS.bg); IM.mazaj=await load(ASSETS.mazaj); IM.logo=await load(ASSETS.logo); IM.wa=await load(ASSETS.wa);
+  try{ await Promise.all([document.fonts.load('800 76px "Noto Kufi Arabic"'),document.fonts.load('700 52px "Noto Kufi Arabic"')]); }catch(e){}
+  const q=new URLSearchParams(location.search);
+  if(q.get('view')==='canvas') document.body.classList.add('canvasonly');
+  if(q.get('ar')) $('ar').value=q.get('ar'); if(q.get('en')!==null&&q.get('en')!==undefined) $('en').value=q.get('en');
+  if(q.get('ai')==='0') $('ai').checked=false;
+  if(q.get('src')){ await autoset(await load(q.get('src'))); if(q.get('tol')){$('tol').value=q.get('tol');} if(q.get('step')){$('step').value=q.get('step');} if(q.get('chroma')){$('chroma').value=q.get('chroma');} if(q.get('sym')==='0')$('sym').checked=false; if(q.get('sym')==='1')$('sym').checked=true; }
+  rebuild(); window.__ready=1; if(q.get('post')){ setTimeout(()=>{draw();cv.toBlob(b=>fetch('/'+q.get('post'),{method:'POST',body:b}),'image/png');},2000); } setTimeout(draw,300); document.fonts.ready.then(draw);
+}
+$('file').addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const u=URL.createObjectURL(f); load(u).then(i=>autoset(i));});
+['tol','sym','vis','step','chroma'].forEach(id=>$(id).addEventListener('input',()=>{$('chromav').textContent=$('chroma').value;$('stepv').textContent=$('step').value;$('tolv').textContent=$('tol').value;$('visv').textContent=$('vis').value;rebuild();}));
+['ar','en','phone'].forEach(id=>$(id).addEventListener('input',draw));
+(function(){ const e=$('edit'); let down=false;
+  const pt=ev=>{const r=e.getBoundingClientRect(); return {x:(ev.clientX-r.left)/r.width,y:(ev.clientY-r.top)/r.height};};
+  const add=ev=>{ if(!srcImg)return; const q=pt(ev); EDITS.push({x:q.x,y:q.y,r:(parseInt($('brush').value)/1000)*1.0,m:$('mode').value}); rebuild(); };
+  e.addEventListener('pointerdown',ev=>{down=true;e.setPointerCapture(ev.pointerId);add(ev);});
+  e.addEventListener('pointermove',ev=>{if(down)add(ev);});
+  e.addEventListener('pointerup',()=>down=false);
+  $('undo').addEventListener('click',()=>{EDITS.length=Math.max(0,EDITS.length-15);rebuild();});
+})();
+$('dl').addEventListener('click',()=>{ draw(); cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='mazaj-ad-'+Date.now()+'.png';a.click();},'image/png'); });
+init();
+</script>
+</body>
+</html>
